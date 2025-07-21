@@ -23,13 +23,19 @@
     }
   },
   "intents" : [ {
-    "path" : "/Help",
+    "path" : "/ты робот",
     "enabled" : true,
     "shared" : false,
     "phrases" : [ {
-      "text" : "Что ты умеешь делать?"
+      "text" : "ты робот?"
     }, {
-      "text" : "Чем ты можешь мне помочь?"
+      "text" : "это бот?"
+    }, {
+      "text" : "кто ты?"
+    }, {
+      "text" : "ты живой?"
+    }, {
+      "text" : "ты человек или программа?"
     } ],
     "classificationRules" : {
       "refs" : [ ]
@@ -57,6 +63,24 @@
     "classificationRules" : {
       "refs" : [ ]
     },
+    "priority" : 0
+  }, {
+    "path" : "/что ты умеешь",
+    "enabled" : true,
+    "shared" : false,
+    "phrases" : [ {
+      "text" : "твои функции"
+    }, {
+      "text" : "что ты умеешь?"
+    }, {
+      "text" : "какие у тебя возможности"
+    }, {
+      "text" : "чем можешь помочь"
+    } ],
+    "classificationRules" : {
+      "refs" : [ ]
+    },
+    "patterns" : [ ],
     "priority" : 0
   } ],
   "entities" : [ ],
