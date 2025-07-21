@@ -49,5 +49,37 @@
     "id" : "/GlobalCatchAll",
     "x" : -883,
     "y" : 2418
+  }, {
+    "id" : "/ShowWeather",
+    "x" : 799,
+    "y" : -116
+  }, {
+    "id" : "/CheckDate",
+    "x" : -464,
+    "y" : 307
+  }, {
+    "id" : "/GetDate",
+    "x" : -317,
+    "y" : 761
+  }, {
+    "id" : "/GetCity",
+    "x" : -200,
+    "y" : -287
+  }, {
+    "id" : "/GetCity/UserCity",
+    "x" : 291,
+    "y" : 764
+  }, {
+    "id" : "/GetCity/CatchAll",
+    "x" : 291,
+    "y" : 1732
+  }, {
+    "id" : "/GetDate/UserDate",
+    "x" : 262,
+    "y" : 711
+  }, {
+    "id" : "/GetDate/CatchAll",
+    "x" : 262,
+    "y" : 1537
   } ]
 }

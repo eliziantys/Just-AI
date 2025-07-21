@@ -1,12 +1,13 @@
-require: slotfilling/slotFilling.sc
+ require: slotfilling/slotFilling.sc
   module = sys.zb-common
 
 theme: /
 
     state: Start
+        intent!: /привет
         q!: $regex</start>
         random: 
-            a: Здравствуйте! Меня зовут Артур, бот-помощник компании Just Tour. Расскажу все о погоде в городах мира и помогу с оформлением заявки на подбор тура. 
+            a: Здравствуйте! Меня зовут Артур, бот-помощник компании Just Tour. Расскажу все о погоде в городах мира и помогу с оформлением заявки на подбор тура.
             a: Приветствую вас! Я Артур, работаю виртуальным ассистентом в Just Tour, лучшем туристическом агентстве. Проинформирую вас о погоде в разных городах и соберу все необходимые данные для запроса на подбор путевки.
         go!: /HowCanIHelpYou
 
@@ -18,7 +19,8 @@ theme: /
         buttons:
             "Прогноз погоды" -> /WeatherForecast
             "Оформить заявку" -> /TravelRequest
-    
+        q: * (нет/не знаю/не сейчас/пока нет/вопросов нет) * || toState = "/DontHaveQuestions"
+
         state: CatchAll
             event: noMatch
             script:
@@ -35,8 +37,97 @@ theme: /
                     $session.catchAllCounter = 0;
                 go!: /SomethingElse
 
+    state: DontHaveQuestions
+        a: Хорошо! Если будут вопросы - обращайтесь!
+        go!: /Goodbye
+
+    state: SomethingElse
+        random: 
+            a: Хотите спросить что-то еще?
+            a: Могу ли я помочь чем-то еще?
+            a: Подскажите, у вас остались еще вопросы?
+        buttons:
+            "Узнать прогноз погоды" -> /WeatherForecast
+            "Оформить заявку на тур" -> /TravelRequest
+        q: да || onlyThisState = true, toState = "/HowCanIHelpYou"
+        q: нет || onlyThisState = true, toState = "/DontHaveQuestions"
+
+        state: CatchAll
+            event: noMatch
+            script:
+                $session.somethingElseCounter = ($session.somethingElseCounter || 0) + 1;
+            
+            if: $session.somethingElseCounter < 3
+                random:
+                    a: Извините, не совсем понял. Уточните, что вас интересует?
+                    a: Не смог разобрать ваш ответ. Выберите один из вариантов:
+                buttons:
+                    "Погода" -> /WeatherForecast
+                    "Тур" -> /TravelRequest
+                go!: /SomethingElse
+            else:
+                a: Простите, так и не смог понять, что вы имели в виду.
+                script:
+                    $session.somethingElseCounter = 0;
+                go!: /Goodbye
+        
+    state: Goodbye
+        intent!: /пока
+        random: 
+            a: Всего доброго!
+            a: Всего вам доброго!
+            a: Всего доброго, до свидания!
+        script:
+            $reactions.transition("/")
+
+    state: TravelRequest
+        a: Этот раздел в разработке
+        go!: /SomethingElse
+        
+    state: GlobalCatchAll
+        event!: noMatch
+        script:
+            $session.globalCounter = ($session.globalCounter || 0) + 1;
+        
+        if: $session.globalCounter < 3
+            random:
+                a: Прошу прощения, не совсем вас понял. Попробуйте, пожалуйста, переформулировать ваш вопрос.
+                a: Простите, не совсем понял. Что именно вас интересует?
+                a: Простите, не получилось вас понять. Переформулируйте, пожалуйста.
+                a: Не совсем понял вас. Пожалуйста, попробуйте задать вопрос по-другому.
+            go!: /HowCanIHelpYou
+        else:
+            a: К сожалению, я не смог обработать ваш запрос. Пожалуйста, попробуйте позже.
+            script:
+                $session.globalCounter = 0;
+            go!: /SomethingElse
+
+    state: AreYouRobot
+        intent!: /ты робот
+        random: 
+            a: Я Артур — бот-помощник компании Just Tour, всегда готов отвечать на ваши вопросы.
+            a: Вы общаетесь с Артуром — чат-ботом, разработанным командой Just Tour, чтобы помогать вам. Всегда рад пообщаться с вами!
+        go!: /HowCanIHelpYou
+            
+    state: WhatCanYouDo
+        intent!: /что ты умеешь
+        random: 
+            a: Умею рассказывать о погоде в городах мира и составлять заявки на подбор подходящего именно вам путешествия.
+            a: С удовольствием расскажу вам о ближайших метеопрогнозах для разных городов и помогу составить запрос на подбор тура.
+        go!: /HowCanIHelpYou
+
+    state: AnyError
+        event!: error
+        random:
+            a: Извините, произошла техническая ошибка. Специалисты обязательно изучат ее и возьмут в работу. Пожалуйста, напишите в чат позже.
+            a: Простите, произошла ошибка в системе. Наши специалисты обязательно ее исправят. Пожалуйста, напишите мне позже.
+        buttons:
+            "В начало" -> /Start
+        script:
+            $reactions.transition("/")
+
     state: WeatherForecast
-        q: * (погод*/прогноз*/узнать погоду) *
+        q!: * (погод*/прогноз*/узнать погоду) *
         script:
             delete $session.city;
             delete $session.date;
@@ -47,88 +138,4 @@ theme: /
             a: Укажите, пожалуйста, название города
             a: Для какого города показать погоду?
         
-        state: UserCity
-            q: * @duckling.location *
-            script:
-                $session.city = $parseTree._location.value;
-            if: $session.date
-                go!: /CheckDate
-            else:
-                go!: /GetDate
-        
-        state: CatchAll
-            event: noMatch
-            script:
-                $session.cityRetryCount = ($session.cityRetryCount || 0) + 1;
-            
-            if: $session.cityRetryCount < 3
-                a: Пожалуйста, укажите город
-                go!: /GetCity
-            else:
-                a: Не удалось распознать город
-                script:
-                    delete $session.cityRetryCount;
-                go!: /SomethingElse
-
-    state: GetDate
-        a: На какую дату вас интересует прогноз?
-        
-        state: UserDate
-            q: * @duckling.date *
-            script:
-                $session.date = $parseTree._date.value;
-            if: $session.city
-                go!: /CheckDate
-            else:
-                go!: /GetCity
-        
-        state: CatchAll
-            event: noMatch
-            script:
-                $session.dateRetryCount = ($session.dateRetryCount || 0) + 1;
-            
-            if: $session.dateRetryCount < 3
-                a: Пожалуйста, укажите дату
-                go!: /GetDate
-            else:
-                a: Не удалось распознать дату
-                script:
-                    delete $session.dateRetryCount;
-                go!: /WeatherForecast
-
-    state: CheckDate
-        script:
-            $temp.dateObj = new Date($parseTree._date.timestamp);
-            $temp.today = new Date();
-            
-            if ($temp.dateObj < $temp.today) {
-                $reactions.answer("Эта дата уже прошла");
-                go!: /GetDate;
-            }
-            else if (($temp.dateObj - $temp.today) > 14*24*60*60*1000) {
-                $reactions.answer("Прогноз доступен только на 14 дней");
-                go!: /GetDate;
-            }
-            else {
-                go!: /ShowWeather;
-            }
-
-    state: ShowWeather
-        script:
-            $reactions.answer(`Погода в ${$session.city} на ${$session.date}: 25°C, солнечно`);
-        go!: /SomethingElse
-
-    state: TravelRequest
-        a: Этот раздел в разработке
-        go!: /SomethingElse
-
-    state: SomethingElse
-        buttons:
-            "Узнать погоду" -> /WeatherForecast
-            "Оформить заявку" -> /TravelRequest
-        go!: /HowCanIHelpYou
-
-    state: DontHaveQuestions
-        a: Хорошего дня!
-        script:
-            $reactions.transition("/");
+       
