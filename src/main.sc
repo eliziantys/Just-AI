@@ -1,13 +1,12 @@
- require: slotfilling/slotFilling.sc
+require: slotfilling/slotFilling.sc
   module = sys.zb-common
 
 theme: /
 
     state: Start
-        intent!: /привет
         q!: $regex</start>
         random: 
-            a: Здравствуйте! Меня зовут Артур, бот-помощник компании Just Tour. Расскажу все о погоде в городах мира и помогу с оформлением заявки на подбор тура.
+            a: Здравствуйте! Меня зовут Артур, бот-помощник компании Just Tour. Расскажу все о погоде в городах мира и помогу с оформлением заявки на подбор тура. 
             a: Приветствую вас! Я Артур, работаю виртуальным ассистентом в Just Tour, лучшем туристическом агентстве. Проинформирую вас о погоде в разных городах и соберу все необходимые данные для запроса на подбор путевки.
         go!: /HowCanIHelpYou
 
@@ -72,13 +71,16 @@ theme: /
                 go!: /Goodbye
         
     state: Goodbye
-        intent!: /пока
-        random: 
+        random:
             a: Всего доброго!
             a: Всего вам доброго!
             a: Всего доброго, до свидания!
         script:
             $reactions.transition("/")
+
+    state: WeatherForecast
+        a: Этот раздел в разработке
+        go!: /SomethingElse
 
     state: TravelRequest
         a: Этот раздел в разработке
@@ -103,15 +105,15 @@ theme: /
             go!: /SomethingElse
 
     state: AreYouRobot
-        intent!: /ты робот
-        random: 
+        intent!: /ты робот|кто ты|это бот/
+        random:
             a: Я Артур — бот-помощник компании Just Tour, всегда готов отвечать на ваши вопросы.
             a: Вы общаетесь с Артуром — чат-ботом, разработанным командой Just Tour, чтобы помогать вам. Всегда рад пообщаться с вами!
         go!: /HowCanIHelpYou
             
     state: WhatCanYouDo
-        intent!: /что ты умеешь
-        random: 
+        intent!: /что ты умеешь|твои функции|возможности/
+        random:
             a: Умею рассказывать о погоде в городах мира и составлять заявки на подбор подходящего именно вам путешествия.
             a: С удовольствием расскажу вам о ближайших метеопрогнозах для разных городов и помогу составить запрос на подбор тура.
         go!: /HowCanIHelpYou
@@ -125,17 +127,3 @@ theme: /
             "В начало" -> /Start
         script:
             $reactions.transition("/")
-
-    state: WeatherForecast
-        q!: * (погод*/прогноз*/узнать погоду) *
-        script:
-            delete $session.city;
-            delete $session.date;
-        go!: /GetCity
-
-    state: GetCity
-        random:
-            a: Укажите, пожалуйста, название города
-            a: Для какого города показать погоду?
-        
-       
