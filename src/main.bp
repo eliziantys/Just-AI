@@ -15,8 +15,8 @@
   }, {
     "id" : "/SomethingElse",
     "name" : "SomethingElse",
-    "x" : 209,
-    "y" : 1024
+    "x" : 612,
+    "y" : 1065
   }, {
     "id" : "/TravelRequest",
     "x" : 1082,
@@ -43,12 +43,12 @@
     "y" : 1074
   }, {
     "id" : "/AreYouRobot",
-    "x" : -880,
-    "y" : 1742
+    "x" : -900,
+    "y" : 1746
   }, {
     "id" : "/GlobalCatchAll",
     "x" : -883,
-    "y" : 2418
+    "y" : 2190
   }, {
     "id" : "/ShowWeather",
     "x" : 799,
