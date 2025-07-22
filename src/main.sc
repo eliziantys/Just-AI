@@ -1,7 +1,7 @@
 require: slotfilling/slotFilling.sc
   module = sys.zb-common
 
-theme: /
+theme: /StartAndEnd
 
     state: Start
         intent: /привет
@@ -9,7 +9,7 @@ theme: /
         random: 
             a: Здравствуйте! Меня зовут Артур, бот-помощник компании Just Tour. Расскажу все о погоде в городах мира и помогу с оформлением заявки на подбор тура.
             a: Приветствую вас! Я Артур, работаю виртуальным ассистентом в Just Tour, лучшем туристическом агентстве. Проинформирую вас о погоде в разных городах и соберу все необходимые данные для запроса на подбор путевки.
-        go!: /HowCanIHelpYou
+        go!: /StartAndEnd/HowCanIHelpYou
 
     state: HowCanIHelpYou
         random: 
@@ -19,7 +19,8 @@ theme: /
         buttons:
             "Прогноз погоды" -> /WeatherForecast
             "Оформить заявку" -> /TravelRequest
-        q: * (нет/не знаю/не сейчас/пока нет/вопросов нет) * || toState = "/DontHaveQuestions"
+        intent: /нет вопросов || toState = "/DontHaveQuestions"
+        event: noMatch || toState = "/HowCanIHelpYou/CatchAll"
 
         state: CatchAll
             event: noMatch
@@ -79,49 +80,20 @@ theme: /
             a: Всего доброго, до свидания!
         script:
             $reactions.transition("/")
-
-    # state: WeatherForecast
-    #     a: Этот раздел в разработке
-    #     go!: /SomethingElse
-        
-    state: WeatherForecast
-        intent!: /погода|прогноз погоды|какая погода/
-        a: В каком городе вас интересует погода?
     
-        state: City
-            q: * @City *
-            # script:
-            #     var city = $parseTree._City;
-            #     var apiKey = "ВАШ_API_КЛЮЧ"; // Замените на реальный ключ
-            #     var url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric&lang=ru`;
-                
-            #     try {
-            #         var response = $http.get(url);
-            #         if (response && response.data) {
-            #             var weatherData = response.data;
-            #             var temp = weatherData.main.temp;
-            #             var feelsLike = weatherData.main.feels_like;
-            #             var description = weatherData.weather[0].description;
-            #             var windSpeed = weatherData.wind.speed;
-                        
-            #             $reactions.answer(`Погода в ${city}:\n🌡 Температура: ${temp}°C (ощущается как ${feelsLike}°C)\n☁️ Описание: ${description}\n🌬 Ветер: ${windSpeed} м/с`);
-            #         } else {
-            #             $reactions.answer("Не удалось получить данные о погоде. Попробуйте позже.");
-            #         }
-            #     } catch (e) {
-            #         $reactions.answer("Произошла ошибка при запросе погоды. Попробуйте уточнить город.");
-            #     }
-            go!: /SomethingElse
-
-    state: NoCity
-        event: noMatch
-        a: Извините, не нашел такого города. Попробуйте еще раз.
-        go!: ../City
-
+    
+    state: WeatherForecast
+        a: Этот раздел в разработке
+        go!: /SomethingElse
+        
     state: TravelRequest
         a: Этот раздел в разработке
         go!: /SomethingElse
         
+   
+   
+theme: /GeneralStates
+    
     state: GlobalCatchAll
         event!: noMatch
         script:
@@ -163,3 +135,91 @@ theme: /
             "В начало" -> /Start
         script:
             $reactions.transition("/")
+    
+    
+theme: /WeatherForecast
+    state: WeatherForecast
+        intent!: /погода|прогноз погоды|какая погода/
+        a: Хотите узнать прогноз погоды?
+        go!: /GetCity
+
+    state: GetCity
+        state: GetCity/UserCity
+            q: @mystem.geo
+            script:
+                $session.city = $parseTree.text;
+            go!: /GetDate
+
+        state: GetCity/CatchAll
+            event: noMatch
+            a: Извините, не нашел такого города. Попробуйте еще раз.
+            go!: ../GetCity
+
+    state: GetDate
+        state: GetDate/UserDate
+            q: @duckling.date
+            script:
+                var dateStr = $parseTree.value.value;  
+                var date = new Date(dateStr);
+                $session.unixTimestamp = Math.floor(date.getTime() / 1000);
+                $session.date = date.toLocaleDateString("ru-RU", {});
+            go!: /TellWeather
+
+        state: GetDate/CatchAll
+            event: noMatch
+            a: Пожалуйста, укажите дату в правильном формате.
+            go!: ../GetDate
+
+    state: TellWeather
+        script:
+            var apiKey = "965fc776c0584a9863e0574ab2d0e374";
+            var url = "https://api.openweathermap.org/data/2.5/weather?q=" + $session.city + 
+                     "&appid=" + apiKey + "&dt=" + $session.unixTimestamp + 
+                     "&units=metric&lang=ru";
+            
+            try {
+                var response = $http.get(url);
+                if (response && response.data) {
+                    var weatherData = response.data;
+                    var temp = weatherData.main.temp;
+                    $reactions.answer(`На ${$session.date} в городе ${$session.city} температура воздуха составит ${temp}°C.`);
+                } else {
+                    $reactions.answer("Не удалось получить данные о погоде. Попробуйте позже.");
+                }
+            } catch (e) {
+                $reactions.answer("Произошла ошибка при запросе погоды. Попробуйте уточнить город.");
+                go!: /GetCity
+            }
+        go!: /SomethingElseForWeather
+
+    state: TellWeather/Error
+        event: error
+        a: Произошла ошибка при получении данных о погоде.
+        go!: /WeatherForecast
+
+    state: SomethingElseForWeather
+        state: SomethingElseForWeather/AnotherOne
+            intent: /еще|что-то еще|другое/
+            a: Хотите узнать прогноз для другой даты или города?
+            go!: /WeatherForecast
+
+        state: SomethingElseForWeather/Agree
+            intent: /да|конечно|хочу/
+            a: Отлично! Давайте начнем сначала.
+            go!: /WeatherForecast
+
+        state: SomethingElseForWeather/CatchAll
+            event: noMatch
+            a: Спасибо за использование сервиса прогноза погоды!
+            go!: /WeatherForecast
+        
+        
+theme: /TravelRequest
+    state: TravelRequest
+        random:
+            a: Готов помочь вам оформить заявку на подбор тура. Как только я соберу от вас нужные для запроса данные, наш менеджер подберет самые подходящие варианты и свяжется с вами.
+            a: Рад помочь с оформлением запроса на подбор тура. Как только мы заполним заявку, наш специалист свяжется с вами, чтобы предложить наиболее подходящие варианты путешествий.
+        a: Подскажите, вы уже определились со страной прибытия?
+
+    state: TravelRequest/Agree    
+    
