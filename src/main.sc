@@ -18,7 +18,7 @@ theme: /StartAndEnd
             a: Подскажите, какой у вас вопрос?
         buttons:
             "Прогноз погоды" -> /WeatherForecast/WeatherForecast
-            "Оформить заявку" -> /TravelRequest/TravelRequest
+            "Оформить заявку" -> /TravelRequest/Init
         intent: /нет вопросов || toState = "/StartAndEnd/DontHaveQuestions"
         event: noMatch || toState = "/StartAndEnd/HowCanIHelpYou/CatchAll"
 
@@ -205,442 +205,326 @@ theme: /WeatherForecast
             a: Спасибо за использование сервиса прогноза погоды!
             go!: /StartAndEnd/Goodbye
         
-        
 theme: /TravelRequest
     state: Init
         script:
-            // Инициализация всех переменных сессии
-            $session.tourRequest = $session.tourRequest || {
-                country: null,
-                people: null,
-                startDate: null,
-                duration: null,
-                package: null,
-                name: null,
-                phone: null,
-                comment: null,
-                price: null,
-                retryCounters: {
-                    country: 0,
-                    people: 0,
-                    date: 0,
-                    duration: 0,
-                    package: 0,
-                    name: 0,
-                    phone: 0
-                }
-            };
-            $log("TourRequest session initialized: " + JSON.stringify($session.tourRequest));
+            if (!$session.tourData) {
+                $session.tourData = {
+                    country: null,
+                    people: null,
+                    startDate: null,
+                    duration: null,
+                    package: null,
+                    name: null,
+                    phone: null,
+                    comment: null,
+                    price: null
+                };
+                log("Инициализирована новая структура tourData");
+            }
+            log("Текущие данные тура: " + JSON.stringify($session.tourData));
+        go!: /TravelRequest/Agree
 
-    state: TravelRequest
-        script:
-            $reactions.transition("/TravelRequest/Init");
-        go!: /TravelRequest/MainQuestion
-
-    state: MainQuestion
-        if: $session.tourRequest.country
-            go!: /TravelRequest/AskNumberOfPeople
-        else:
-            random:
-                a: Вы уже выбрали страну для путешествия?
-                a: Подскажите, в какую страну планируете поездку?
-            go!: /TravelRequest/ProcessCountry
-
-    state: ProcessCountry
-        state: GetCountry
+    state: Agree
+        state: Country
             intent: /sys/aimylogic/ru/country
             script:
-                $session.tourRequest.country = $parseTree._country || $parseTree.text;
-                $session.tourRequest.retryCounters.country = 0;
-                $log("Country set: " + $session.tourRequest.country);
-            a: Отлично! Страна {{$session.tourRequest.country}} записана. Сколько человек поедет?
-            go!: /TravelRequest/AskNumberOfPeople
-
-        state: NoCountry
-            intent: /нет|не знаю/
-            script:
-                $session.tourRequest.country = "Не указана";
-                $log("Country not specified");
-            a: Хорошо, менеджер поможет с выбором страны. Сколько человек поедет?
+                $session.tourData.country = $parseTree._country || $parseTree.text;
+                log("Страна сохранена: " + $session.tourData.country);
+            a: {{$session.tourData.country}} - отличный выбор!
             go!: /TravelRequest/AskNumberOfPeople
 
         state: CatchAll
             event: noMatch
-            script:
-                $session.tourRequest.retryCounters.country += 1;
-                $log("Country retry #" + $session.tourRequest.retryCounters.country);
-            
-            if: $session.tourRequest.retryCounters.country < 3
-                random:
-                    a: Пожалуйста, укажите название страны.
-                    a: В какую страну планируете путешествие?
-                go!: ..
-            else:
-                script:
-                    $session.tourRequest.country = "Не указана";
-                    $session.tourRequest.retryCounters.country = 0;
-                a: Пропускаем выбор страны. Сколько человек поедет?
-                go!: /TravelRequest/AskNumberOfPeople
+            a: Пожалуйста, укажите страну, куда хотите поехать.
+            go!: ../Country
+
+    state: Disagree
+        a: Хорошо, если передумаете - обращайтесь!
+        go!: /StartAndEnd/Goodbye
 
     state: AskNumberOfPeople
-        a: Укажите количество путешественников:
-        buttons:
-            "1" -> /TravelRequest/ProcessPeople
-            "2" -> /TravelRequest/ProcessPeople
-            "3" -> /TravelRequest/ProcessPeople
-            "4+" -> /TravelRequest/ProcessPeople
-            "Пока не знаю" -> /TravelRequest/ProcessPeople
-
-    state: ProcessPeople
-        state: GetNumber
+        a: На сколько человек нужен тур?
+        
+        state: Number
             intent: /sys/aimylogic/ru/number
             script:
-                $session.tourRequest.people = parseInt($parseTree._number) || 1;
-                $session.tourRequest.retryCounters.people = 0;
-                $log("People set: " + $session.tourRequest.people);
-            a: Записал {{$session.tourRequest.people}} человек. Когда планируете поездку?
-            go!: /TravelRequest/AskDate
-
+                var peopleCount = parseInt($parseTree._number) || parseInt($parseTree.text);
+                if (isNaN(peopleCount)) {
+                    log("Ошибка преобразования числа людей: " + $parseTree.text);
+                    $reactions.answer("Не удалось распознать количество. Пожалуйста, укажите число.");
+                    $reactions.transition("../Number");
+                } else {
+                    $session.tourData.people = peopleCount;
+                    log("Количество людей сохранено: " + $session.tourData.people);
+                    $reactions.answer("Записал " + $session.tourData.people + " человек.");
+                    $reactions.transition("/TravelRequest/AskStartDate");
+                }
+        
         state: DontKnow
-            intent: /не знаю|пока не знаю/
+            q: (не знаю/пока не решил/не определился)
             script:
-                $session.tourRequest.people = 1;
-                $log("Default people count set: 1");
-            a: Будем считать 1 человека. Когда планируете поездку?
-            go!: /TravelRequest/AskDate
+                $session.tourData.people = 1;
+                log("Количество людей не указано, установлено по умолчанию: 1");
+            a: Будем считать 1 человека.
+            go!: /TravelRequest/AskStartDate
 
         state: CatchAll
             event: noMatch
-            script:
-                $session.tourRequest.retryCounters.people += 1;
-                $log("People retry #" + $session.tourRequest.retryCounters.people);
-            
-            if: $session.tourRequest.retryCounters.people < 2
-                a: Пожалуйста, укажите количество цифрой.
-                go!: ..
-            else:
-                script:
-                    $session.tourRequest.people = 1;
-                    $session.tourRequest.retryCounters.people = 0;
-                a: Будем считать 1 человека. Когда планируете поездку?
-                go!: /TravelRequest/AskDate
+            a: Пожалуйста, укажите количество человек цифрой.
+            go!: ../Number
 
-    state: AskDate
+    state: AskStartDate
         a: Когда планируете поездку? (ДД.ММ.ГГГГ)
-        buttons:
-            "В этом месяце" -> /TravelRequest/ProcessDate
-            "В следующем месяце" -> /TravelRequest/ProcessDate
-            "Еще не определились" -> /TravelRequest/ProcessDate
-
-    state: ProcessDate
-        state: GetDate
+        
+        state: Date
             intent: @duckling.date
             script:
-                var date = new Date($parseTree.value.value);
-                $session.tourRequest.startDate = date.toISOString();
-                $session.tourRequest.formattedDate = date.toLocaleDateString("ru-RU");
-                $session.tourRequest.retryCounters.date = 0;
-                $log("Date set: " + $session.tourRequest.startDate);
-            a: Записал дату {{$session.tourRequest.formattedDate}}. На сколько дней?
-            go!: /TravelRequest/AskDuration
-
+                try {
+                    if ($parseTree.value && $parseTree.value.value) {
+                        var date = new Date($parseTree.value.value);
+                        $session.tourData.startDate = date.toISOString();
+                        log("Дата начала сохранена: " + $session.tourData.startDate);
+                        $reactions.answer("Записал дату " + date.toLocaleDateString("ru-RU") + ".");
+                        $reactions.transition("/TravelRequest/AskDuration");
+                    } else {
+                        throw new Error("Не удалось распознать дату");
+                    }
+                } catch (e) {
+                    log("Ошибка обработки даты: " + e.message);
+                    $reactions.answer("Не удалось распознать дату. Пожалуйста, укажите в формате ДД.ММ.ГГГГ.");
+                    $reactions.transition("../Date");
+                }
+        
         state: DontKnow
-            intent: /не знаю|не определились/
+            q: (не знаю/пока не решил/не определился)
             script:
-                $session.tourRequest.startDate = null;
-                $log("Date not specified");
-            a: Даты будут согласованы. На сколько дней планируете?
+                $session.tourData.startDate = null;
+                log("Дата начала не указана");
+            a: Дату можно уточнить позже.
             go!: /TravelRequest/AskDuration
 
         state: CatchAll
             event: noMatch
-            script:
-                $session.tourRequest.retryCounters.date += 1;
-                $log("Date retry #" + $session.tourRequest.retryCounters.date);
-            
-            if: $session.tourRequest.retryCounters.date < 2
-                a: Пожалуйста, укажите дату в формате ДД.ММ.ГГГГ.
-                go!: ..
-            else:
-                script:
-                    $session.tourRequest.startDate = null;
-                    $session.tourRequest.retryCounters.date = 0;
-                a: Пропускаем выбор даты. На сколько дней планируете?
-                go!: /TravelRequest/AskDuration
+            a: Пожалуйста, укажите дату в формате ДД.ММ.ГГГГ.
+            go!: ../Date
 
     state: AskDuration
-        a: Планируемая продолжительность (в днях):
-        buttons:
-            "3-5 дней" -> /TravelRequest/ProcessDuration
-            "1 неделя" -> /TravelRequest/ProcessDuration
-            "2 недели" -> /TravelRequest/ProcessDuration
-            "Пока не знаю" -> /TravelRequest/ProcessDuration
-
-    state: ProcessDuration
-        state: GetDuration
+        a: На сколько дней нужен тур?
+        
+        state: Number
             intent: /sys/aimylogic/ru/number
             script:
-                $session.tourRequest.duration = parseInt($parseTree._number) || 7;
-                $session.tourRequest.retryCounters.duration = 0;
-                $log("Duration set: " + $session.tourRequest.duration);
-            a: Записал {{$session.tourRequest.duration}} дней. Выберите пакет:
-            go!: /TravelRequest/AskPackage
-
+                var duration = parseInt($parseTree._number) || parseInt($parseTree.text);
+                if (isNaN(duration)) {
+                    log("Ошибка преобразования длительности тура: " + $parseTree.text);
+                    $reactions.answer("Не удалось распознать количество дней. Пожалуйста, укажите число.");
+                    $reactions.transition("../Number");
+                } else {
+                    $session.tourData.duration = duration;
+                    $session.tourData.endDate = calculateEndDate();
+                    log("Длительность тура сохранена: " + $session.tourData.duration);
+                    $reactions.answer("Записал " + $session.tourData.duration + " дней.");
+                    $reactions.transition("/TravelRequest/AskServices");
+                }
+        
         state: DontKnow
-            intent: /не знаю/
+            q: (не знаю/пока не решил/не определился)
             script:
-                $session.tourRequest.duration = 7;
-                $log("Default duration set: 7");
-            a: Будем считать 7 дней. Выберите пакет:
-            go!: /TravelRequest/AskPackage
+                $session.tourData.duration = 7;
+                $session.tourData.endDate = calculateEndDate();
+                log("Длительность не указана, установлено по умолчанию: 7 дней");
+            a: Будем считать стандартные 7 дней.
+            go!: /TravelRequest/AskServices
 
         state: CatchAll
             event: noMatch
-            script:
-                $session.tourRequest.retryCounters.duration += 1;
-                $log("Duration retry #" + $session.tourRequest.retryCounters.duration);
-            
-            if: $session.tourRequest.retryCounters.duration < 2
-                a: Пожалуйста, укажите количество дней.
-                go!: ..
-            else:
-                script:
-                    $session.tourRequest.duration = 7;
-                    $session.tourRequest.retryCounters.duration = 0;
-                a: Будем считать 7 дней. Выберите пакет:
-                go!: /TravelRequest/AskPackage
+            a: Пожалуйста, укажите количество дней цифрой.
+            go!: ../Number
 
-    state: AskPackage
-        a: Доступные пакеты:
-        
-            1. Эконом - 7 000 руб/день
-            • Отель 3*
-            • Трансфер
-        
-            2. Стандарт - 12 000 руб/день
-            • Отель 4*
-            • Трансфер
-            • Завтраки
-        
-            3. VIP - 20 000 руб/день
-            • Отель 5*
-            • Трансфер
-            • Питание
-            • Экскурсии
-        
-            Ваш выбор?
+    state: AskServices
+        a: Выберите пакет услуг:
         buttons:
-            "Эконом" -> /TravelRequest/ProcessPackage
-            "Стандарт" -> /TravelRequest/ProcessPackage
-            "VIP" -> /TravelRequest/ProcessPackage
-            "Подробнее" -> /TravelRequest/PackageDetails
-
-    state: ProcessPackage
-        state: GetPackage
+            "Эконом (7 000 руб/день)" -> /TravelRequest/AskServices/Package
+            "Стандарт (12 000 руб/день)" -> /TravelRequest/AskServices/Package
+            "VIP (20 000 руб/день)" -> /TravelRequest/AskServices/Package
+            "Что входит в пакеты?" -> /TravelRequest/AskServices/WhatIsIncluded
+            "Сколько это будет стоить?" -> /TravelRequest/AskServices/Price
+        
+        state: Package
             q: (Эконом|Стандарт|VIP)
             script:
-                $session.tourRequest.package = $parseTree.text;
-                $session.tourRequest.price = calculatePrice();
-                $session.tourRequest.retryCounters.package = 0;
-                $log("Package set: " + $session.tourRequest.package);
-            a: Пакет "{{$session.tourRequest.package}}" выбран. Ваше имя?
+                $session.tourData.package = $parseTree.text;
+                $session.tourData.price = calculatePrice();
+                log("Пакет услуг сохранен: " + $session.tourData.package);
+                log("Рассчитанная стоимость: " + ($session.tourData.price || "не определена"));
+            a: Пакет "{{$session.tourData.package}}" выбран.
             go!: /TravelRequest/AskName
+
+        state: WhatIsIncluded
+            a: В пакет Эконом входит... Стандарт включает... VIP содержит...
+            go!: ..
+
+        state: Price
+            a: {{$session.tourData.price ? "Примерная стоимость: " + $session.tourData.price + " руб." : "Стоимость зависит от выбранного пакета и продолжительности."}}
+            go!: ..
 
         state: CatchAll
             event: noMatch
-            script:
-                $session.tourRequest.retryCounters.package += 1;
-                $log("Package retry #" + $session.tourRequest.retryCounters.package);
-            
-            if: $session.tourRequest.retryCounters.package < 2
-                a: Пожалуйста, выберите один из пакетов.
-                go!: /TravelRequest/AskPackage
-            else:
-                script:
-                    $session.tourRequest.package = "Не выбран";
-                    $session.tourRequest.retryCounters.package = 0;
-                a: Пропускаем выбор пакета. Ваше имя?
-                go!: /TravelRequest/AskName
-
-    state: PackageDetails
-        a: Подробнее о пакетах:
-        
-            Эконом:
-            - Размещение в отеле 3*
-            - Трансфер из аэропорта
-            
-            Стандарт:
-            - Отель 4*
-            - Трансфер
-            - Завтраки
-            
-            VIP:
-            - Отель 5*
-            - Трансфер
-            - Питание
-            - Экскурсии
-            - Страховка
-            
-            Ваш выбор?
-        go!: /TravelRequest/AskPackage
+            a: Пожалуйста, выберите один из предложенных пакетов.
+            go!: /TravelRequest/AskServices
 
     state: AskName
-        a: Ваше имя для заявки:
+        a: Ваше имя для заявки?
         
-        state: GetName
+        state: Name
             q: * *
             script:
-                $session.tourRequest.name = $request.query.trim();
-                $session.tourRequest.retryCounters.name = 0;
-                $log("Name set: " + $session.tourRequest.name);
-            a: Спасибо, {{$session.tourRequest.name}}! Ваш телефон?
+                $session.tourData.name = $request.query;
+                log("Имя сохранено: " + $session.tourData.name);
+            a: Спасибо, {{$session.tourData.name}}!
             go!: /TravelRequest/AskPhone
 
         state: CatchAll
             event: noMatch
-            script:
-                $session.tourRequest.retryCounters.name += 1;
-                $log("Name retry #" + $session.tourRequest.retryCounters.name);
-            
-            if: $session.tourRequest.retryCounters.name < 2
-                a: Пожалуйста, укажите ваше имя.
-                go!: ..
-            else:
-                script:
-                    $session.tourRequest.name = "Не указано";
-                    $session.tourRequest.retryCounters.name = 0;
-                a: Имя можно будет указать позже. Ваш телефон?
-                go!: /TravelRequest/AskPhone
+            a: Пожалуйста, укажите ваше имя.
+            go!: ../Name
 
     state: AskPhone
-        a: Контактный телефон:
+        a: Ваш контактный телефон?
         
-        state: GetPhone
-            q: $phone
+        state: Phone
+            intent: /sys/aimylogic/ru/phone
             script:
-                $session.tourRequest.phone = $parseTree._phone || $request.query;
-                $session.tourRequest.retryCounters.phone = 0;
-                $log("Phone set: " + $session.tourRequest.phone);
-            a: Телефон {{$session.tourRequest.phone}} записан. Комментарии?
+                $session.tourData.phone = $parseTree._phone || $request.query;
+                log("Телефон сохранен: " + $session.tourData.phone);
+            a: Телефон {{$session.tourData.phone}} записан.
             go!: /TravelRequest/AskComment
 
         state: CatchAll
             event: noMatch
-            script:
-                $session.tourRequest.retryCounters.phone += 1;
-                $log("Phone retry #" + $session.tourRequest.retryCounters.phone);
-            
-            if: $session.tourRequest.retryCounters.phone < 3
-                a: Пожалуйста, укажите телефон в формате +7XXX XXX-XX-XX.
-                go!: ..
-            else:
-                a: Без телефона мы не сможем связаться. Попробуйте оставить заявку позже.
-                script:
-                    $reactions.transition("/StartAndEnd/Goodbye");
+            a: Пожалуйста, укажите телефон в формате +7XXX XXX-XX-XX.
+            go!: ../Phone
 
     state: AskComment
-        a: Дополнительные пожелания:
+        a: Хотите добавить комментарий к заявке?
         
-        state: GetComment
+        state: Comment
             q: *
             script:
-                $session.tourRequest.comment = $request.query;
-                $log("Comment set: " + $session.tourRequest.comment);
-            go!: /TravelRequest/Confirm
+                $session.tourData.comment = $request.query;
+                log("Комментарий сохранен: " + $session.tourData.comment);
+            a: Комментарий добавлен.
+            go!: /TravelRequest/Confirmation
 
-        state: NoComment
-            intent: /нет|без комментариев/
+        state: Disagree
+            q: (нет/не нужно/без комментария)
             script:
-                $session.tourRequest.comment = null;
-                $log("No comment");
-            go!: /TravelRequest/Confirm
+                $session.tourData.comment = null;
+                log("Комментарий не добавлен");
+            a: Хорошо, комментария не будет.
+            go!: /TravelRequest/Confirmation
 
-    state: Confirm
-        script:
-            var message = "Проверьте заявку:\n\n" +
-                "Страна: " + ($session.tourRequest.country || "Не указана") + "\n" +
-                "Количество человек: " + ($session.tourRequest.people || 1) + "\n" +
-                "Дата: " + ($session.tourRequest.formattedDate || "Не определена") + "\n" +
-                "Дней: " + ($session.tourRequest.duration || 7) + "\n" +
-                "Пакет: " + ($session.tourRequest.package || "Не выбран") + "\n";
-                
-            if ($session.tourRequest.price) {
-                message += "Примерная стоимость: " + $session.tourRequest.price + " руб.\n";
-            }
-            
-            message += "Имя: " + ($session.tourRequest.name || "Не указано") + "\n" +
-                      "Телефон: " + $session.tourRequest.phone + "\n";
-                      
-            if ($session.tourRequest.comment) {
-                message += "Комментарий: " + $session.tourRequest.comment + "\n";
-            }
-            
-            $reactions.answer(message);
-            
-        a: Все верно?
-        buttons:
-            "Да, отправить" -> /TravelRequest/Submit
-            "Нет, исправить" -> /TravelRequest/Edit
-            "Отменить" -> /StartAndEnd/Goodbye
-
-    state: Submit
-        script:
-            sendConfirmationEmail();
-            $log("Request submitted: " + JSON.stringify($session.tourRequest));
-        a: Заявка отправлена! Номер: #{{Math.floor(Math.random() * 10000)}}. Менеджер свяжется в течение часа.
-        go!: /StartAndEnd/Goodbye
-
-    state: Edit
-        a: Что исправить?
-        buttons:
-            "Страну" -> /TravelRequest/MainQuestion
-            "Количество" -> /TravelRequest/AskNumberOfPeople
-            "Дату" -> /TravelRequest/AskDate
-            "Пакет" -> /TravelRequest/AskPackage
-            "Имя" -> /TravelRequest/AskName
-            "Телефон" -> /TravelRequest/AskPhone
-            "Комментарий" -> /TravelRequest/AskComment
-
+    state: Confirmation
         script:
             function calculatePrice() {
-                if (!$session.tourRequest.package || !$session.tourRequest.people || !$session.tourRequest.duration) {
-                    $log("Insufficient data for price calculation");
+                if (!$session.tourData.package || !$session.tourData.people || !$session.tourData.duration) {
+                    log("Недостаточно данных для расчета стоимости");
                     return null;
                 }
                 
-                var priceMap = {
-                    "Эконом": 7000,
-                    "Стандарт": 12000,
-                    "VIP": 20000
-                };
+                var pricePerDay = 0;
+                switch($session.tourData.package) {
+                    case "Эконом": pricePerDay = 7000; break;
+                    case "Стандарт": pricePerDay = 12000; break;
+                    case "VIP": pricePerDay = 20000; break;
+                    default: return null;
+                }
                 
-                var total = priceMap[$session.tourRequest.package] * 
-                            $session.tourRequest.people * 
-                            $session.tourRequest.duration;
-                
-                $log("Price calculated: " + total + " for " + 
-                     $session.tourRequest.package + " package, " + 
-                     $session.tourRequest.people + " people, " + 
-                     $session.tourRequest.duration + " days");
-                
+                var total = pricePerDay * $session.tourData.people * $session.tourData.duration;
+                log("Рассчитана стоимость: " + total + " руб.");
                 return total;
             }
-            
-            function sendConfirmationEmail() {
-                var emailBody = "Новая заявка на тур:\n\n" +
-                    "Имя: " + ($session.tourRequest.name || "Не указано") + "\n" +
-                    "Телефон: " + $session.tourRequest.phone + "\n" +
-                    "Страна: " + ($session.tourRequest.country || "Не указана") + "\n" +
-                    "Количество человек: " + ($session.tourRequest.people || 1) + "\n" +
-                    "Дата: " + ($session.tourRequest.formattedDate || "Не определена") + "\n" +
-                    "Продолжительность: " + ($session.tourRequest.duration || 7) + " дней\n" +
-                    "Пакет: " + ($session.tourRequest.package || "Не выбран") + "\n" +
-                    "Комментарий: " + ($session.tourRequest.comment || "нет") + "\n\n" +
-                    "Полные данные:\n" + JSON.stringify($session.tourRequest, null, 2);
-                
-                $mail.send("bookings@justtour.com", "Новая заявка от " + ($session.tourRequest.name || "клиента"), emailBody);
-                $log("Confirmation email sent");
+    
+            function calculateEndDate() {
+                if (!$session.tourData.startDate || !$session.tourData.duration) {
+                    log("Недостаточно данных для расчета даты окончания");
+                    return null;
+                }
+                try {
+                    var date = new Date($session.tourData.startDate);
+                    date.setDate(date.getDate() + $session.tourData.duration);
+                    log("Дата окончания рассчитана: " + date.toISOString());
+                    return date.toISOString();
+                } catch (e) {
+                    log("Ошибка расчета даты окончания: " + e.message);
+                    return null;
+                }
             }
-            
+    
+            function formatConfirmationMessage() {
+                var msg = "Проверьте заявку:\n\n" +
+                    "Страна: " + ($session.tourData.country || "Не указана") + "\n" +
+                    "Количество человек: " + ($session.tourData.people || 1) + "\n" +
+                    "Дата: " + ($session.tourData.startDate ? new Date($session.tourData.startDate).toLocaleDateString("ru-RU") : "Не указана") + "\n" +
+                    "Продолжительность: " + ($session.tourData.duration || 7) + " дней\n" +
+                    "Пакет: " + ($session.tourData.package || "Не выбран") + "\n";
+                    
+                if ($session.tourData.price) {
+                    msg += "Примерная стоимость: " + $session.tourData.price + " руб.\n";
+                }
+                
+                msg += "Имя: " + ($session.tourData.name || "Не указано") + "\n" +
+                       "Телефон: " + $session.tourData.phone + "\n\n" +
+                       "Все верно?";
+                
+                log("Сформировано сообщение подтверждения");
+                return msg;
+            }
 
-            
+        function sendEmail() {
+            try {
+                var emailText = "Приветствую!\n" +
+                    "Это автоматически отправленное ботом Артуром письмо о новой заявке на подбор тура.\n" +
+                    "Имя клиента: " + ($session.tourData.name || $session.userName || "Не указано") + "\n" +
+                    "Телефон: " + $session.tourData.phone + "\n" +
+                    "Желаемая страна пребывания: " + ($session.tourData.country || "Не указана") + "\n" +
+                    "Количество людей в поездке: " + ($session.tourData.people || 1) + "\n" +
+                    "Приблизительная дата начала поездки: " + 
+                        ($session.tourData.startDate ? new Date($session.tourData.startDate).toLocaleDateString("ru-RU") : "Не указана") + "\n" +
+                    "Приблизительная дата окончания поездки: " + 
+                        ($session.tourData.endDate ? new Date($session.tourData.endDate).toLocaleDateString("ru-RU") : "Не указана") + "\n" +
+                    "Желаемый пакет услуг: " + ($session.tourData.package || "Не выбран") + "\n";
+                    
+                if ($session.tourData.comment) {
+                    emailText += "Комментарий клиента: \"" + $session.tourData.comment + "\"\n";
+                }
+                
+                if ($session.tourData.price) {
+                    emailText += "Примерная стоимость тура: " + $session.tourData.price + " руб.\n";
+                }
+                
+                $log("Отправка email: " + emailText);
+                // $mailer.send("tour-requests@justtour.com", "Новая заявка на тур", emailText);
+            } catch (e) {
+                $log("Ошибка при формировании email: " + e.message);
+            }
+        }
+        a: {{formatConfirmationMessage()}}
+        buttons:
+            "Да, все верно" -> /TravelRequest/Confirmation/Agree
+            "Нет, исправить" -> /TravelRequest/Confirmation/Disagree
+        
+        state: Agree
+            script:
+                sendEmail();
+                $session.requestId = "JT-" + Math.floor(Math.random() * 9000 + 1000);
+                log("Заявка подтверждена, ID: " + $session.requestId);
+            a: Заявка #{{$session.requestId}} оформлена! Менеджер свяжется с вами.
+            go!: /StartAndEnd/Goodbye
+
+        state: Disagree
+            script:
+                log("Пользователь запросил изменение заявки");
+            a: Хорошо, давайте исправим. Что нужно изменить?
+            go!: /TravelRequest/Init
