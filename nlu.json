@@ -165,16 +165,6 @@
     "patterns" : [ ],
     "priority" : 0
   }, {
-    "path" : "/disagree",
-    "enabled" : true,
-    "shared" : false,
-    "phrases" : [ ],
-    "classificationRules" : {
-      "refs" : [ ]
-    },
-    "patterns" : [ ],
-    "priority" : 0
-  }, {
     "path" : "/Оформить заявку",
     "enabled" : true,
     "shared" : false,
@@ -209,7 +199,7 @@
     "phrases" : [ {
       "text" : "цена"
     }, {
-      "text" : "сколько стоит \\"
+      "text" : "сколько стоит?"
     } ],
     "classificationRules" : {
       "refs" : [ ]
@@ -231,6 +221,14 @@
       "refs" : [ ]
     },
     "patterns" : [ ],
+    "priority" : 0
+  }, {
+    "path" : "/Новый интент 1",
+    "enabled" : true,
+    "shared" : false,
+    "classificationRules" : {
+      "refs" : [ ]
+    },
     "priority" : 0
   } ],
   "entities" : [ {

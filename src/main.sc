@@ -853,9 +853,13 @@ theme: /TravelRequest
                 $reactions.transition("/TravelRequest/AskComment");
             } else {
                 $reactions.answer("Укажите номер телефона для связи.");
-                 $reactions.buttons([
-                {text: "Поделиться контактом", transition: "/TravelRequest/AskPhone/ProcessContact"}
-            ]);
+                $reactions.replyButtons ([
+                    {
+                        text: "Поделиться контактом",
+                        request_contact: true
+                    }
+                ]);
+
             }
         intent: /sys/aimylogic/ru/phone || toState = "/TravelRequest/AskPhone/ProcessPhone"
         event: noMatch || toState = "/TravelRequest/AskPhone/CatchAll"
