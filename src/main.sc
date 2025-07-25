@@ -4,14 +4,13 @@ require: slotfilling/slotFilling.sc
 theme: /StartAndEnd
 
     state: Start
-        intent: /привет
+        intent!: /sys/aimylogic/ru/hello
         random: 
             a: Здравствуйте!
                  Меня зовут Артур, бот-помощник компании Just Tour. Расскажу все о погоде в городах мира и помогу с оформлением заявки на подбор тура.
-            a: Приветствую вас! 
+            a: Приветствую вас!
                 Я Артур, работаю виртуальным ассистентом в Just Tour, лучшем туристическом агентстве. Проинформирую вас о погоде в разных городах и соберу все необходимые данные для запроса на подбор путевки.
         go!: /StartAndEnd/HowCanIHelpYou
-    
     
     state: Start1
         q!: $regex</start>
@@ -102,28 +101,27 @@ theme: /StartAndEnd
                 go!: /StartAndEnd/Goodbye
 
     state: Goodbye
-        intent: /пока
+        intent!: /sys/aimylogic/ru/parting
         random: 
             a: Всего доброго!
             a: Всего вам доброго!
             a: Всего доброго, до свидания!
         script:
             script:
-                $session.tourData = {
-                    country: null,
-                    people: null,
-                    startDate: null,
-                    duration: null,
-                    endDate: null,
-                    package: null,
-                    name: null,
-                    phone: null,
-                    comment: null,
-                    price: null
-                };
-                log("Инициализирована новая структура tourData");    
-            $reactions.transition("/")
-    
+            $session.tourData = {
+                country: null,
+                people: null,
+                startDate: null,
+                duration: null,
+                endDate: null,
+                package: null,
+                name: null,
+                phone: null,
+                comment: null,
+                price: null
+            };
+            log("Инициализирована новая структура tourData");    
+                $reactions.transition("/")
     
 theme: /GeneralStates
     
