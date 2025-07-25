@@ -881,7 +881,7 @@ theme: /TravelRequest
 
         state: DontKnow || noContext = true
             intent: /sys/aimylogic/ru/uncertainty
-            a: Мне жаль, но без указания вашего телефона отправить заявку не получится. Укажите его, пожалуйста.
+            a: Мне жаль, но без указания вашего контактного номера отправить заявку не получится. Укажите его, пожалуйста.
             
         state: CatchAll || noContext = true
             event: noMatch
