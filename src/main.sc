@@ -879,34 +879,26 @@ theme: /TravelRequest
                 $reactions.answer("Контактные данные получены!");
                 $reactions.transition("/TravelRequest/AskComment");
 
-
-        state: CatchAll
+        state: DontKnow || noContext = true
+            intent: /sys/aimylogic/ru/uncertainty
+            a: Мне жаль, но без указания вашего телефона отправить заявку не получится. Укажите его, пожалуйста.
+            
+        state: CatchAll || noContext = true
             event: noMatch
             script:
                 $session.nameRetryCount = ($session.nameRetryCount || 0) + 1;
         
-                var rawText = $parseTree.text;
-                var text = "";
+            if: ($session.nameRetryCount < 2)
+                random:
+                    a: Пожалуйста, укажите ваш номер телефона для связи.
+                    
+    
         
-                if (rawText && typeof rawText.toLowerCase === "function") {
-                    text = rawText.toLowerCase();
-                }
-        
-                if (text.includes("не знаю") || text.includes("не хочу") || text.includes("зачем")) {
-                    $reactions.answer("Я понимаю ваши сомнения. Можно указать просто инициалы.");
-                    $reactions.transition("/TravelRequest/AskName");
-                }
-                else if ($session.nameRetryCount < 2) {
-                    $reactions.answer("Пожалуйста, укажите ваше имя.");
-                    $session.lastState = "/TravelRequest/AskName/CatchAll";
-                }
-                else {
-                    $reactions.answer("Хорошо, вы можете указать имя позже.");
-                    $session.nameRetryCount = 0;
-                    $session.tourData = $session.tourData || {};
-                    $session.tourData.userName = "Не указано";
-                    $reactions.transition("/TravelRequest/AskPhone");
-                }
+            else: 
+                script:
+                    $session.nameRetryCount = 0
+                    $reactions.answer("К сожалению, без указания вашего номеры телефона заявка не может быть отправлена. Вы можете вернуться к заполнению позже или связаться с нами по номеру 8(812) 000-00-00.");
+                    $reactions.transition("/StartAndEnd/SomethingElse");
 
             
 
