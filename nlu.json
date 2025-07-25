@@ -199,12 +199,7 @@
       "refs" : [ ]
     },
     "patterns" : [ ],
-    "slots" : [ {
-      "name" : "пакетыыы",
-      "entity" : "Пакет",
-      "required" : true,
-      "prompts" : [ "а что входит в " ]
-    } ],
+    "slots" : [ ],
     "priority" : 0
   }, {
     "path" : "/Эконом",
