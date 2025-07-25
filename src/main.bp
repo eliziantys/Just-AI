@@ -159,64 +159,64 @@
     "y" : 715
   }, {
     "id" : "/GeneralStates/AreYouRobot",
-    "x" : 262,
-    "y" : 2121
+    "x" : 240,
+    "y" : 1916
   }, {
     "id" : "/GeneralStates/WhatCanYouDo",
-    "x" : 262,
-    "y" : 2755
+    "x" : 280,
+    "y" : 2653
   }, {
     "id" : "/GeneralStates/AnyError",
-    "x" : 257,
-    "y" : 3407
+    "x" : 252,
+    "y" : 3408
   }, {
     "id" : "/StartAndEnd/Start",
     "x" : 258,
     "y" : 662
   }, {
     "id" : "/StartAndEnd/HowCanIHelpYou",
-    "x" : 275,
-    "y" : 1634
+    "x" : 300,
+    "y" : 1572
   }, {
     "id" : "/StartAndEnd/DontHaveQuestions",
-    "x" : 275,
-    "y" : 2330
+    "x" : 307,
+    "y" : 2334
   }, {
     "id" : "/StartAndEnd/SomethingElse",
-    "x" : 275,
-    "y" : 3042
+    "x" : 318,
+    "y" : 2906
   }, {
     "id" : "/StartAndEnd/Goodbye",
-    "x" : 275,
-    "y" : 3843
+    "x" : 318,
+    "y" : 3786
   }, {
     "id" : "/TravelRequest/TravelRequest",
-    "x" : -900,
-    "y" : -206
+    "x" : -1004,
+    "y" : -672
   }, {
     "id" : "/WeatherForecast/WeatherForecast",
-    "x" : 211,
-    "y" : 585
+    "x" : 266,
+    "y" : 403
   }, {
     "id" : "/WeatherForecast/GetCity",
-    "x" : 216,
-    "y" : 931
+    "x" : 579,
+    "y" : 695
   }, {
     "id" : "/WeatherForecast/GetDate",
-    "x" : 204,
-    "y" : 1338
+    "x" : -476,
+    "y" : 965
   }, {
     "id" : "/WeatherForecast/TellWeather",
-    "x" : 198,
-    "y" : 1757
+    "x" : 848,
+    "y" : 1707
   }, {
     "id" : "/WeatherForecast/TellWeather/Error",
     "x" : 242,
     "y" : 2211
   }, {
     "id" : "/WeatherForecast/SomethingElseForWeather",
-    "x" : 211,
-    "y" : 2816
+    "x" : 460,
+    "y" : 2806
   }, {
     "id" : "/WeatherForecast/GetCity/GetCity/UserCity",
     "x" : 291,
@@ -255,8 +255,8 @@
     "y" : 644
   }, {
     "id" : "/TravelRequest/AskPhone",
-    "x" : -52,
-    "y" : 1223
+    "x" : -67,
+    "y" : 1299
   }, {
     "id" : "/TravelRequest/DatesFound",
     "x" : -385,
@@ -279,8 +279,8 @@
     "y" : 211
   }, {
     "id" : "/TravelRequest/AskNumberOfPeople",
-    "x" : 794,
-    "y" : -252
+    "x" : 833,
+    "y" : -379
   }, {
     "id" : "/TravelRequest/Disagree",
     "x" : 347,
@@ -315,12 +315,12 @@
     "y" : 627
   }, {
     "id" : "/TravelRequest/AskComment",
-    "x" : -365,
-    "y" : 1222
+    "x" : -455,
+    "y" : 905
   }, {
     "id" : "/TravelRequest/AskName",
-    "x" : -656,
-    "y" : 1219
+    "x" : -982,
+    "y" : 1274
   }, {
     "id" : "/TravelRequest/PackageDetails",
     "x" : -966,
@@ -363,8 +363,8 @@
     "y" : 394
   }, {
     "id" : "/TravelRequest/Init",
-    "x" : -1584,
-    "y" : 346
+    "x" : -2314,
+    "y" : 402
   }, {
     "id" : "/TravelRequest/AskPhone/GetPhone",
     "x" : 262,
@@ -415,15 +415,167 @@
     "y" : 1579
   }, {
     "id" : "/TravelRequest/Confirmation",
-    "x" : -759,
-    "y" : 46
+    "x" : -1916,
+    "y" : -116
   }, {
     "id" : "/TravelRequest/AskServices",
-    "x" : -384,
-    "y" : 17
+    "x" : -511,
+    "y" : 7
   }, {
     "id" : "/TravelRequest/AskStartDate",
-    "x" : -46,
-    "y" : 108
+    "x" : 471,
+    "y" : 118
+  }, {
+    "id" : "/TravelRequest/AskStartDate/Date",
+    "x" : 262,
+    "y" : 655
+  }, {
+    "id" : "/TravelRequest/AskStartDate/DontKnow",
+    "x" : 262,
+    "y" : 1310
+  }, {
+    "id" : "/TravelRequest/AskStartDate/CatchAll",
+    "x" : 262,
+    "y" : 1974
+  }, {
+    "id" : "/TravelRequest/CatchAll",
+    "x" : 122,
+    "y" : -336
+  }, {
+    "id" : "/TravelRequest/AskDuration/Number",
+    "x" : 240,
+    "y" : 538
+  }, {
+    "id" : "/TravelRequest/AskDuration/DontKnow",
+    "x" : 262,
+    "y" : 1326
+  }, {
+    "id" : "/TravelRequest/AskNumberOfPeople/Number",
+    "x" : 338,
+    "y" : 600
+  }, {
+    "id" : "/TravelRequest/AskNumberOfPeople/DontKnow",
+    "x" : 262,
+    "y" : 1318
+  }, {
+    "id" : "/TravelRequest/AskNumberOfPeople/CatchAll",
+    "x" : 262,
+    "y" : 1991
+  }, {
+    "id" : "/TravelRequest/Agree/Country",
+    "x" : 762,
+    "y" : 716
+  }, {
+    "id" : "/TravelRequest/Agree/CatchAll",
+    "x" : 762,
+    "y" : 1390
+  }, {
+    "id" : "/TravelRequest/TravelRequest/CatchAll",
+    "x" : 423,
+    "y" : -47
+  }, {
+    "id" : "/TravelRequest/Travel",
+    "x" : 71,
+    "y" : 267
+  }, {
+    "id" : "/TravelRequest/AskName/Name",
+    "x" : 262,
+    "y" : 725
+  }, {
+    "id" : "/TravelRequest/AskName/UnusualName",
+    "x" : 262,
+    "y" : 2345
+  }, {
+    "id" : "/TravelRequest/AskName/CatchAll",
+    "x" : 262,
+    "y" : 1705
+  }, {
+    "id" : "/TravelRequest/AskPhone/ProcessContact",
+    "x" : 297,
+    "y" : 27
+  }, {
+    "id" : "/TravelRequest/UnusualName",
+    "x" : -901,
+    "y" : 158
+  }, {
+    "id" : "/StartAndEnd/HowCanIHelpYou/CatchAll",
+    "x" : 791,
+    "y" : 1038
+  }, {
+    "id" : "/WeatherForecast/SomethingElseForWeather/AnotherOne",
+    "x" : 262,
+    "y" : 665
+  }, {
+    "id" : "/WeatherForecast/SomethingElseForWeather/Agree",
+    "x" : 987,
+    "y" : 819
+  }, {
+    "id" : "/WeatherForecast/SomethingElseForWeather/CatchAll",
+    "x" : 987,
+    "y" : 1441
+  }, {
+    "id" : "/WeatherForecast/OfferTourRussia",
+    "x" : -813,
+    "y" : -392
+  }, {
+    "id" : "/WeatherForecast/OfferTourRussia/Disagree",
+    "x" : 762,
+    "y" : 641
+  }, {
+    "id" : "/WeatherForecast/OfferTourRussia/CatchAll",
+    "x" : 1209,
+    "y" : 1380
+  }, {
+    "id" : "/TravelRequest/InitFrom",
+    "x" : -109,
+    "y" : -207
+  }, {
+    "id" : "/TravelRequest/AskServices/ProcessPackage",
+    "x" : 262,
+    "y" : 643
+  }, {
+    "id" : "/TravelRequest/AskServices/WhatIsIncluded",
+    "x" : 262,
+    "y" : 1932
+  }, {
+    "id" : "/TravelRequest/AskServices/CatchAll",
+    "x" : 1488,
+    "y" : 2018
+  }, {
+    "id" : "/TravelRequest/AskServices/Price",
+    "x" : 259,
+    "y" : 1098
+  }, {
+    "id" : "/TravelRequest/AskServices/ProcessPackage/Эконом",
+    "x" : 762,
+    "y" : 725
+  }, {
+    "id" : "/TravelRequest/AskServices/ProcessPackage/Стандарт",
+    "x" : 762,
+    "y" : 1475
+  }, {
+    "id" : "/TravelRequest/AskServices/ProcessPackage/VIP",
+    "x" : 762,
+    "y" : 2224
+  }, {
+    "id" : "/TravelRequest/AskComment/Comment",
+    "x" : 988,
+    "y" : 1110
+  }, {
+    "id" : "/TravelRequest/AskComment/Disagree",
+    "x" : 262,
+    "y" : 655
+  }, {
+    "id" : "/TravelRequest/Confirmation/Agree",
+    "x" : 262,
+    "y" : 655
+  }, {
+    "id" : "/TravelRequest/Confirmation/Disagree",
+    "x" : 262,
+    "y" : 1265
+  }, {
+    "id" : "/TravelRequest/Confirmation/CatchAll",
+    "x" : 262,
+    "y" : 1785
   } ]
 }
