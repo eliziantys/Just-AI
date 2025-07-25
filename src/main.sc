@@ -549,34 +549,45 @@ theme: /TravelRequest
         a: Также укажите, сколько дней будет длиться путешествие.
         intent: /sys/aimylogic/ru/uncertainty || toState = "/TravelRequest/AskDuration/DontKnow"
         event: noMatch || toState = "/TravelRequest/AskDuration/CatchAll"
-
+    
         state: CatchNumber
             q: * (@duckling.number) *
             q: * (@caila.entities.NUMBER) *
             script:
                 var duration = parseFloat($parseTree._number || $parseTree.value);
-                
-                // Функциональное выражение вместо объявления функции
+    
                 var isInteger = function(num) {
                     return typeof num === 'number' && 
                            isFinite(num) && 
                            Math.floor(num) === num;
                 };
-                
+    
                 if (isNaN(duration) || duration < 1 || !isInteger(duration)) {
                     $reactions.answer("Пожалуйста, укажите целое число дней больше нуля (например, '7' или 'десять').");
                     $reactions.transition("/TravelRequest/AskDuration");
                 } else {
-                    var startDate = $session.startDate instanceof Date ? 
-                        $session.startDate : new Date($session.startDate);
-                    
+                    var startDate;
+                    try {
+                        startDate = ($session.startDate instanceof Date)
+                            ? $session.startDate
+                            : new Date($session.startDate);
+                        
+                        if (isNaN(startDate.getTime())) throw "Invalid date";
+                    } catch (e) {
+                        // Если дата не задана или некорректна — используем сегодняшнюю
+                        startDate = new Date();
+                        $session.startDate = startDate.toISOString();
+                    }
+    
                     var endDate = new Date(startDate);
                     endDate.setDate(startDate.getDate() + duration);
-                    
-                    $session.duration = duration;
-                    $session.endDate = endDate;
-                    
-                    // Функциональное выражение для склонения
+    
+                    // Сохраняем в сессию
+                    $session.tourData = $session.tourData || {};
+                    $session.tourData.duration = duration;
+                    $session.tourData.endDate = endDate.toISOString();
+                    $session.endDate = endDate.toISOString();
+    
                     var getDayPluralForm = function(number) {
                         var lastTwo = number % 100;
                         var lastOne = number % 10;
@@ -585,36 +596,52 @@ theme: /TravelRequest
                         if (lastOne >= 2 && lastOne <= 4) return "дня";
                         return "дней";
                     };
-                    
+    
                     $reactions.answer("Отлично! Ваше путешествие продлится " + duration + " " + getDayPluralForm(duration) + ".");
                     $reactions.transition("/TravelRequest/AskServices");
                 }
-        
+    
         state: DontKnow
             intent: /sys/aimylogic/ru/uncertainty
-            a: Хорошо, вы можете указать длительность позже. Мы подберём стандартный вариант 7 дней.
+            a: Хорошо, вы можете указать длительность позже. Мы подберём стандартный вариант — 7 дней.
             script:
-                $session.duration = 7;
-                var startDate = new Date($session.startDate);
+                var defaultDuration = 7;
+                var startDate;
+    
+                try {
+                    startDate = ($session.startDate instanceof Date)
+                        ? $session.startDate
+                        : new Date($session.startDate);
+    
+                    if (isNaN(startDate.getTime())) throw "Invalid date";
+                } catch (e) {
+                    startDate = new Date();
+                    $session.startDate = startDate.toISOString();
+                }
+    
                 var endDate = new Date(startDate);
-                endDate.setDate(startDate.getDate() + 7);
-                $session.endDate = endDate;
+                endDate.setDate(startDate.getDate() + defaultDuration);
+    
+                $session.tourData = $session.tourData || {};
+                $session.tourData.duration = defaultDuration;
+                $session.tourData.endDate = endDate.toISOString();
+                $session.endDate = endDate.toISOString();
             go!: /TravelRequest/AskServices
-            
+    
         state: CatchAll || noContext = true
             event: noMatch
             script:
                 $session.catchAllCounter = ($session.catchAllCounter || 0) + 1;
-            
+    
             if: $session.catchAllCounter < 3
-                random: 
+                random:
                     a: Извините, не совсем понял вас. Сколько дней планируете быть в поездке?
                     a: К сожалению, не понял вас. На какой срок планируете отъезд?
-            else: 
+            else:
                 script:
                     $session.catchAllCounter = 0;
                 go!: /TravelRequest/AskDuration/DontKnow
-                
+
     
     state: AskServices
         a: Уточните, пожалуйста, какой пакет услуг вам интересен?
