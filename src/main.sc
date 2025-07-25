@@ -853,13 +853,9 @@ theme: /TravelRequest
                 $reactions.transition("/TravelRequest/AskComment");
             } else {
                 $reactions.answer("Укажите номер телефона для связи.");
-                $reactions.replyButtons ([
-                    {
-                        text: "Поделиться контактом",
-                        request_contact: true
-                    }
-                ]);
-
+                 $reactions.buttons([
+                {text: "Поделиться контактом", transition: "/TravelRequest/AskPhone/ProcessContact"}
+            ]);
             }
         intent: /sys/aimylogic/ru/phone || toState = "/TravelRequest/AskPhone/ProcessPhone"
         event: noMatch || toState = "/TravelRequest/AskPhone/CatchAll"
@@ -939,6 +935,12 @@ theme: /TravelRequest
 
     state: Confirmation
         script:
+            var formatDate = function(dateStr) {
+                if (!dateStr) return "Не указано";
+                var date = new Date(dateStr);
+                if (isNaN(date.getTime())) return dateStr;
+                return date.toLocaleDateString("ru-RU");
+            };
             var data = $session.tourData || {};
             log("DEBUG: Содержимое tourData — " + JSON.stringify(data, null, 2));
                 var summary = "Все собранные данные по заявке:\n\n";
@@ -946,8 +948,8 @@ theme: /TravelRequest
                 summary += "- Телефон: " + (data.phone || "Не указано") + "\n";
                 summary += "- Страна: " + (data.country || "Не указано") + "\n";
                 summary += "- Кол-во человек: " + (data.people || "Не указано") + "\n";
-                summary += "- Дата начала: " + (data.startDate || "Не указано") + "\n";
-                summary += "- Дата окончания: " + ($session.endDate || "Не указано") + "\n";
+                summary += "- Дата начала: " + (formatDate(data.startDate) || "Не указано") + "\n";
+                summary += "- Дата окончания: " + (formatDate(data.endDate) || "Не указано") + "\n";
                 summary += "- Пакет услуг: " + (data.package || "Не указано") + "\n";
                 summary += "- Комментарий: " + (data.userComment || "Не указано") + "\n";
                 summary += "- Примерная цена: " + (data.price || "Не указана") + "\n";
