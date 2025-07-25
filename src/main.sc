@@ -307,15 +307,6 @@ theme: /WeatherForecast
             intent: /sys/aimylogic/ru/negation || toState = "/StartAndEnd/SomethingElse"
             intent: /sys/aimylogic/ru/agreement || toState = "/WeatherForecast/WeatherForecast"
             event: noMatch || toState = "/WeatherForecast/OfferTourRussia/Disagree/CatchAll"
-            script:
-                $session.dateCatchAllCounter = ($session.dateCatchAllCounter || 0) + 1;
-            if: $session.dateCatchAllCounter < 3
-                a: Простите, не совсем понял. Хотите узнать прогноз погоды для другого города?
-            else: 
-                a: Простите, так и не смог понять, что вы имели в виду..
-                script:
-                    $session.dateCatchAllCounter = 0;
-                go!: /StartAndEnd/SomethingElse
 
             state: CatchAll || noContext = true
              event: noMatch
